@@ -1,6 +1,6 @@
 # 29. End-to-End Implementation Workflow
 
-Use this as the default sequence for a non-trivial change.
+Use this as the default sequence for a non-trivial change, scaled to affected behavior. Trivial/local work needs local contract inspection and targeted checks, not seven separate analyses. Moderate behavioral work uses relevant chapters, tests, and applicable completion criteria. Business-critical, stateful, or security-sensitive work requires the full failure-mode review and complete definition of done. Repository-required checks remain mandatory at every tier.
 
 ### Phase 1 - Understand
 
@@ -23,6 +23,7 @@ Use this as the default sequence for a non-trivial change.
 - Decide transaction/resource lifetime.
 - Decide test level.
 - Do not design extension points for requirements that do not exist.
+- Preserve existing repository invariants, architecture, tests, public contracts, and documented conventions over generic stylistic preferences unless the task explicitly changes them.
 ### Phase 3 - Protect behavior
 
 - Add a failing behavioral test or characterization test.
@@ -77,4 +78,4 @@ Ask:
 - Can any secret or private data leak?
 - Can a caller perform this on another user's/tenant's resource?
 
-For business-critical code, these questions are not optional.
+For business-critical, stateful, or security-sensitive changes, review all these questions against the affected behavior. Mark genuinely inapplicable concerns as such; do not invent unrelated infrastructure to satisfy them.

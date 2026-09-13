@@ -24,6 +24,12 @@ is required.
 
 ## Priorities and rule strength
 
+Existing repository invariants, architecture, tests, public contracts, and
+documented conventions outrank generic stylistic guidance unless the task
+explicitly changes them. A local bug fix is not permission to redesign the
+surrounding architecture. Surface conflicting evidence or unsafe behavior rather
+than silently rewriting contracts or weakening tests to fit a preferred design.
+
 Resolve design conflicts in this order: correctness; security and data integrity;
 clarity; testability; simplicity; maintainability; operability; performance;
 consistency. Do not sacrifice correctness for brevity or security for convenience.
@@ -34,6 +40,23 @@ SHOULD is the default with concrete reasons for deviations; MAY is optional.
 Name any impossible requirement and its consequence rather than silently skipping
 it. These are engineering standards, not permission to override the user's task,
 repository instructions, or the host agent's safety and tool constraints.
+
+## Match depth to risk
+
+Always inspect the local contract and affected callers, preserve repository
+constraints, and run targeted checks. Choose depth by impact, not diff size:
+
+| Change | Required depth |
+| --- | --- |
+| Trivial/local, with no sensitive behavior affected | Inspect the local contract and run targeted checks. No full chapter sweep, architecture analysis, or complete checklist. |
+| Moderate behavioral change | Load relevant chapters, inspect and update behavioral tests where needed, and check applicable completion criteria. |
+| Business-critical, stateful, or security-sensitive change | Load relevant chapters, perform a full failure-mode review of affected behavior, and review the complete definition of done. |
+
+A one-line authorization or transaction change is not trivial. Escalate when
+inspection reveals broader impact or uncertainty about invariants. Deeper review
+still concerns the affected behavior, not unrelated distributed-system design.
+These tiers govern the procedure and reference checklists below; they never waive
+security, data integrity, or repository-required checks.
 
 ## Working procedure
 
@@ -64,7 +87,8 @@ repository instructions, or the host agent's safety and tool constraints.
    build, and configured security checks. Inspect the change for accidental edits,
    debug output, stale comments, disabled tests, secrets, unhandled errors,
    unnecessary dependencies, and unrelated churn. Never weaken checks to hide a bug.
-7. **Check production failure behavior.** For business-critical work, consider
+7. **Check production failure behavior.** For business-critical, stateful, or
+   security-sensitive work, consider
    timeout, duplicate execution, concurrent workers, process death halfway through,
    hostile input, unexpected dependency responses, diagnostics, secret exposure,
    and cross-user/tenant access. Return truthful outcomes, including partial failure.
@@ -74,16 +98,18 @@ repository instructions, or the host agent's safety and tool constraints.
 The references are the full standard, not optional summaries. At task start read
 [the operating procedure](references/03-ai-coding-agent-operating-procedure.md)
 and [the compact instruction block](references/31-compact-agent-instruction-block.md).
-Before editing, select and read **every chapter relevant to the change**, including
-its caveats and examples. A change can require several topics; do not select only
-the chapter matching its headline. For example, a retrying payment operation also
-needs contracts, errors, security, concurrency, typing, tests, and observability.
+Then apply the risk tiers above. Trivial/local changes need no additional chapter
+loading unless inspection exposes a relevant uncertainty. For moderate and
+high-risk changes, read every relevant chapter, including its caveats and examples.
+A retrying payment operation needs contracts, errors, security, concurrency,
+typing, tests, and observability—not just the chapter matching its headline.
 
-For non-trivial work follow [the seven-phase workflow](references/29-end-to-end-implementation-workflow.md).
-Use [the decision rules](references/28-explicit-decision-rules-for-coding-agents.md)
-when choosing a design or reviewing code. Before completion apply
-[the complete definition of done](references/30-definition-of-done-checklist.md),
-reporting relevant checks that were unavailable rather than assuming they passed.
+For non-trivial work use [the seven-phase workflow](references/29-end-to-end-implementation-workflow.md)
+at the selected depth. Consult [the decision rules](references/28-explicit-decision-rules-for-coding-agents.md)
+when a design or review question calls for them. Use applicable sections of
+[the definition of done](references/30-definition-of-done-checklist.md) for moderate
+changes and review the full checklist for high-risk changes. Report relevant
+checks that were unavailable rather than assuming they passed.
 
 All paths below are relative to this installed skill directory, not the target
 repository. Read them with the host agent's file tools. Load details on demand,
@@ -126,6 +152,26 @@ not the entire playbook for every small task.
 | [29. End-to-End Implementation Workflow](references/29-end-to-end-implementation-workflow.md) | Executing the seven phases of a non-trivial change. |
 | [30. Definition of Done Checklist](references/30-definition-of-done-checklist.md) | Checking all applicable completion criteria before returning work. |
 | [31. Compact Agent Instruction Block](references/31-compact-agent-instruction-block.md) | Loading the compact baseline instructions at task start. |
+
+## Policy and enforcement
+
+- **Skill = reasoning policy.** Instructions guide decisions; they do not enforce them.
+- **Repository rules = project-specific constraints.** Local contracts, commands,
+  architecture, and documented conventions define what this project requires.
+- **CI/tooling = enforcement.** Use the repository's existing checks and required
+  merge gates to make mechanically checkable requirements block bad merges.
+
+Inspect configured checks relevant to the change and run their documented commands.
+Type checks, lint, and tests should be required CI checks where the project uses
+them; secret scanning can block detected credentials. Review requirements and
+coverage/diff tooling can flag removed tests, weakened assertions, or coverage
+regressions, but cannot prove that tests still protect the intended behavior.
+Passing automation is not a substitute for contract review.
+
+Do not disable checks, lower thresholds, or bypass merge gates to make a change
+pass. Report missing enforcement or unobserved CI results explicitly. Reuse existing
+tooling; add or change enforcement only when the task calls for it. Installing
+this skill does not install hooks, configure CI, or enable branch protection.
 
 ## Completion report
 

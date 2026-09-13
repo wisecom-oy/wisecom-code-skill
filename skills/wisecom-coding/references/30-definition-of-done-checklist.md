@@ -1,6 +1,6 @@
 # 30. Definition of Done Checklist
 
-A coding agent can use this exact checklist before returning a task.
+Apply this checklist at the change's risk tier. Trivial/local work needs local contract inspection and targeted checks, not the full checklist. Moderate behavioral changes use applicable sections. Business-critical, stateful, or security-sensitive changes require review of the complete checklist against affected behavior; mark genuinely inapplicable items as such instead of expanding scope. No tier waives security, data integrity, or repository-required checks.
 
 ### Behavior
 

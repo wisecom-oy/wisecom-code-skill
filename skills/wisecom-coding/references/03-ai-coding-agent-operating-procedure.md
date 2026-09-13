@@ -2,11 +2,21 @@
 
 An AI coding agent MUST treat coding as a verification loop rather than text generation.
 
+Scale this procedure to the affected behavior, not the number of changed lines:
+
+- Trivial/local changes: inspect the local contract and affected callers; run targeted checks. No exhaustive chapter loading or full failure-mode checklist.
+- Moderate behavioral changes: load relevant chapters, inspect and update behavioral tests where needed, and check applicable completion criteria.
+- Business-critical, stateful, or security-sensitive changes: perform a full failure-mode review of affected behavior and review the complete definition of done.
+
+Escalate when inspection reveals broader impact or uncertain invariants. Always preserve security, data integrity, and repository-required checks; do not analyze unrelated systems merely to fill a checklist.
+
 ## 3.1 Before editing
 
 - Read the task literally. Identify the requested behavior, constraints, compatibility requirements, and acceptance criteria.
 
 - Inspect relevant repository context. Read nearby code, types, tests, configuration, package manifests, and established patterns before inventing a design.
+- Existing repository invariants, architecture, tests, public contracts, and documented conventions outrank generic stylistic guidance unless the task explicitly changes them.
+
 
 - Locate the ownership boundary. Determine which module should own the behavior. Do not place logic in a convenient file merely because it is easy to edit.
 
@@ -65,6 +75,8 @@ The agent MUST run the checks that are available and relevant:
 - build;
 
 - targeted security/static-analysis checks when configured.
+
+Use the repository's documented commands and existing CI/tooling. Required merge checks enforce mechanically checkable constraints; skill instructions alone do not. Do not disable checks or bypass gates. Report missing enforcement and unobserved CI results without introducing a new pipeline unless the task calls for it.
 
 Then review the actual diff. Check for accidental edits, dead code, debug output, stale comments, disabled tests, copied secrets, unhandled errors, widened API surface, and unnecessary dependencies.
 

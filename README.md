@@ -30,6 +30,16 @@ Guides the agent through understanding the task, designing the smallest correct 
 
 Ask your agent: **“Use wisecom-coding to implement this change”** or **“Review this change using wisecom-coding.”** Activation depends on your agent; installing the skill does not enforce rules through hooks or CI.
 
+## Policy and enforcement
+
+- **Skill = reasoning policy:** repository-local invariants, architecture, tests, public contracts, and documented conventions outrank generic style unless the task explicitly changes them.
+- **Repository rules = project-specific constraints:** define the project's commands, contracts, architecture, and conventions.
+- **CI/tooling = enforcement:** require the project's type checks, lint, and tests to pass before merge; use secret scanning to block detected credentials and review/coverage tooling to flag suspicious test changes.
+
+Automation cannot prove every security property or detect every weakened test; contract review still matters. The skill reuses existing enforcement and reports gaps. It does not install hooks, configure CI, or enable branch protection.
+
+Depth follows risk: trivial/local changes use local contract inspection and targeted checks; moderate behavioral changes add relevant chapters and tests; business-critical, stateful, or security-sensitive changes require full failure-mode review of affected behavior and the complete definition of done. A small diff does not make a sensitive change low-risk.
+
 ## Contents
 
 [SKILL.md](skills/wisecom-coding/SKILL.md) is the short entry point and topic index. Its `references/` directory contains the introduction and all 31 chapters of the Wisecom Coding Playbook. Detailed chapters load as needed.

@@ -5,6 +5,17 @@ The following is a condensed version suitable for embedding directly into an AI 
 Write code for correctness first, then security/data integrity, clarity, testability,
 simplicity, maintainability, operability, performance, and consistency.
 
+Existing repository invariants, architecture, tests, public contracts, and documented
+conventions outrank generic stylistic guidance unless the task explicitly changes them.
+Surface conflicting evidence or unsafe behavior; do not silently redesign contracts.
+
+Scale depth by impact, not diff size: trivial/local changes need local contract
+inspection and targeted checks; moderate behavioral changes need relevant chapters,
+tests, and applicable completion criteria; business-critical, stateful, or
+security-sensitive changes need a full failure-mode review of affected behavior
+and the complete definition of done. Escalate on uncertain invariants. Do not
+analyze unrelated systems or waive security, integrity, or repository-required checks.
+
 ### Before editing:
 
 - Read the requirement, nearby code, types, tests, config, and repository conventions.
@@ -79,7 +90,12 @@ simplicity, maintainability, operability, performance, and consistency.
 
 ### Before completion:
 
-- Run formatter, linter, typecheck, relevant tests, build, and configured security checks.
+- Run available formatter, linter, typecheck, tests, build, and configured security
+  checks relevant to the change, plus all repository-required checks.
+- Treat the skill as reasoning policy, repository rules as project-specific constraints,
+  and CI/tooling as enforcement. Reuse documented commands and required merge gates;
+  never bypass them or weaken checks to pass. Report missing enforcement or unobserved
+  CI results. Add enforcement only when the task calls for it.
 - Inspect the final diff for accidental edits, debug output, stale comments, disabled
   tests, secrets, unsafe error handling, excessive API surface, and unrelated changes.
 - Never claim a check passed unless it was actually run and observed.
