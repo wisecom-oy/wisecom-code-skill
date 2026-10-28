@@ -4,27 +4,18 @@ Apply this chapter when code builds, signs, sends, queues, unsubscribes, suppres
 
 Receivers combine authenticated identity, sender reputation, recipient expectations, message content, and local organizational policy. Correct DNS cannot make unwanted mail wanted, and good wording cannot repair broken authentication or a damaged reputation. No provider publishes a reproducible global scoring formula.
 
+Sections 32.1–32.8 state checks and practices; prohibitions live only in 32.9.
+
 ## 32.1 Keep outcomes separate
 
 "Spam filtering" covers several distinct outcomes: temporary SMTP deferral, permanent rejection, Spam/Junk placement, quarantine, and later reclassification. Promotions and Updates are inbox categories, not spam verdicts.
 
-- MUST NOT treat SMTP acceptance (`250`) as inbox placement.
 - MUST model and report SMTP acceptance, inbox placement, inbox category, complaints, and business outcomes as separate measurements.
-- MUST distinguish temporary failures (`4xx`, back off and retry) from permanent failures (`5xx`, classify and suppress where the address is genuinely invalid).
+- MUST classify `4xx` responses as temporary (bounded retry with backoff) and `5xx` as permanent.
 
-## 32.2 Cross-provider baseline
+## 32.2 Provider requirements
 
-Implement the strongest common requirement, even where one provider's minimum is weaker:
-
-- [ ] SPF published for the envelope (MAIL FROM) domain, covering every production sending path.
-- [ ] DKIM signing on every production sending path, aligned with the visible From domain.
-- [ ] DMARC published for the From domain, with aggregate reporting (`rua`).
-- [ ] TLS on outbound SMTP.
-- [ ] Forward-confirmed reverse DNS for every sending IP, and a valid HELO/EHLO hostname.
-- [ ] RFC 8058 one-click unsubscribe plus a visible body link for marketing mail.
-- [ ] Recorded consent for every promotional recipient.
-
-Provider differences that change implementation decisions:
+Implement the strongest common requirement, even where one provider's minimum is weaker: aligned SPF and DKIM, DMARC, TLS, forward-confirmed reverse DNS (32.4), recorded consent (32.7), and one-click unsubscribe for marketing (32.6).
 
 | Receiver | Requirement that matters to code |
 | --- | --- |
@@ -75,13 +66,13 @@ SPF
 DKIM
 
 - [ ] The active sending path actually signs. A published key alone proves nothing.
-- [ ] Signing is the last step: after MIME serialization, personalization, link/tracking rewrites, and footer insertion. Later substantive changes invalidate the signature.
+- [ ] Signing is the last step: after MIME serialization, personalization, link/tracking rewrites, and footer insertion.
 - [ ] RSA-SHA256 with a 2048-bit key as baseline. SHA-1 is prohibited.
 - [ ] `List-Unsubscribe` and `List-Unsubscribe-Post` are covered by the signature when present.
 
 DMARC
 
-- [ ] At least one passing, aligned SPF or DKIM identity. Some providers require both to pass.
+- [ ] At least one passing SPF or DKIM identity aligns with the visible From domain. Some providers require both to pass.
 - [ ] `p=none` understood as monitoring, not disabled authentication.
 - [ ] Enforcement (`quarantine`/`reject`) chosen for spoofing protection, not expected to buy inbox placement.
 - [ ] Current standard: RFC 9989 (May 2026), superseding RFCs 7489 and 9091. Verify receiver adoption before relying on new semantics.
@@ -90,22 +81,21 @@ DNS and SMTP identity
 
 - [ ] Sending IP → PTR hostname → A/AAAA → same sending IP.
 - [ ] Valid SMTP host identity in HELO/EHLO.
-- [ ] IPv6 tested independently when enabled; its PTR and authentication must hold too.
+- [ ] TLS on outbound SMTP.
+- [ ] IPv6 tested independently when enabled.
 - [ ] MX records are not mistaken for outbound authentication; MX concerns receiving mail.
 
-Forwarding
-
-- Forwarding can break SPF; mailing-list modification can break DKIM. ARC preserves prior authentication results but is not a universal trust override.
+Forwarding can break SPF; mailing-list modification can break DKIM. ARC preserves prior authentication results but is not a universal trust override.
 
 ## 32.5 Message construction
 
 - MUST build messages with a maintained MIME library, not string concatenation.
 - MUST use correct encodings and multipart boundaries, a valid `Date`, a unique `Message-ID`, and no duplicated single-instance headers.
 - MUST make `text/plain` and `text/html` alternatives carry the same information.
-- SHOULD keep HTML simple and tested for email clients: no scripts, forms, iframes, or embedded objects.
-- SHOULD keep essential information in readable text; images support it and carry alt text.
+- SHOULD keep HTML simple and tested across email clients.
+- SHOULD state why the recipient is receiving the message.
+- SHOULD link to recognizable, sender-related domains; avoid URL shorteners.
 - SHOULD send attachments only when expected, clearly named, without double extensions; prefer a link to an authenticated account page.
-- SHOULD make link labels match their destinations, using a recognizable domain related to the sender. Avoid URL shorteners.
 
 Content patterns:
 
@@ -113,14 +103,11 @@ Content patterns:
 | --- | --- |
 | `Re:`/`Fwd:` subject with no real thread | Accurate subject: "The project estimate you requested" |
 | Sender name impersonating a CEO, bank, or authority | Stable company/team name on an authorized domain |
-| "FINAL WARNING: verify your password immediately" | A real event and deadline; never request a password by reply |
+| "FINAL WARNING: verify your password immediately" | A real event and deadline; credentials only through the normal sign-in flow |
 | Unexpected bank-account change with a vague invoice | Reference the actual order; use an established payment route |
 | Homoglyphs, zero-width characters, unrelated filler text | Ordinary accurate language, including legitimate non-English text |
 | Familiar link label pointing to an unrelated domain | Clear action leading to the expected domain |
-| Entire message in one promotional image | Readable text with supporting images |
-| Plain-text part contradicting the HTML part | Equivalent meaning in both parts |
-
-State why the recipient is receiving the message.
+| Entire message in one promotional image | Readable text with supporting images and alt text |
 
 ## 32.6 One-click unsubscribe (marketing mail)
 
@@ -129,13 +116,13 @@ List-Unsubscribe: <https://news.example.com/u/OPAQUE_TOKEN>
 List-Unsubscribe-Post: List-Unsubscribe=One-Click
 ```
 
-The endpoint is a trust boundary and a data-integrity path:
+The endpoint is a trust boundary and a data-integrity path. Test each item end to end before release:
 
 - [ ] HTTPS `POST` works without login, cookies, confirmation step, or redirect.
 - [ ] Token is unguessable and verified; it does not expose the address or a sequential ID.
 - [ ] Suppression is committed durably before success is returned.
 - [ ] Repeated requests are idempotent and harmless.
-- [ ] A plain `GET` (link scanners, prefetchers) does not unsubscribe anyone.
+- [ ] A plain `GET` (link scanners, prefetchers) changes nothing.
 - [ ] A visible unsubscribe link also exists in the body.
 - [ ] Suppression is shared across every sending system and re-applied at dispatch time, so queued campaigns honor recent opt-outs.
 - [ ] Processing completes well within two days (Yahoo requirement).
@@ -146,52 +133,44 @@ The endpoint is a trust boundary and a data-integrity path:
 | --- | --- |
 | Purchased lists, accidental or unverified signups | Explicit consent, address confirmation, recorded subscription scope |
 | Turning a monthly update into daily sales mail | Purpose and frequency the recipient selected |
-| Continuing after complaints or unsubscribe | Prompt, durable, shared suppression |
 | Repeatedly mailing nonexistent addresses | Bounce classification and suppression of genuinely invalid recipients |
-| Sudden unexplained spikes, aggressive retries | Predictable queues, gradual ramp-up, adaptive backoff |
+| Sudden unexplained spikes, aggressive retries | Predictable queues, gradual ramp-up with real opted-in traffic, adaptive backoff |
 | Abused shared pools, compromised accounts, unsafe linked domains | Monitored infrastructure, secured accounts, controlled sending |
 
 - MUST record the user action or subscription that justifies each message.
+- MUST make retries idempotent per Message-ID (chapter 16).
+- MUST route bounce classifications and complaint feedback (32.8) into the suppression system.
 - SHOULD separate transactional and promotional streams (subdomains, IPs, or ESP streams). This aids operations and diagnosis but does not guarantee independent reputation.
 - SHOULD NOT use ordinary Exchange Online mailboxes as a bulk-mail platform.
-- MUST back off on `4xx` deferrals; retries are bounded and idempotent per Message-ID (see chapter 16).
-- SHOULD ramp new domains/IPs gradually with real opted-in traffic, adjusting to observed responses.
 
 ## 32.8 Monitoring and diagnostics
 
 - Keep full SMTP response text, enhanced status codes, sender identities, Message-ID, template version, and protected `.eml` samples. Treat samples as personal data.
-- Read the receiver-generated `Authentication-Results` header on a delivered message. Self-added `spf=pass` or favorable spam-score headers establish nothing.
+- Verify authentication from the receiver-generated `Authentication-Results` header on a delivered message, through the real ESP, for each target receiver. DNS dashboards are not evidence.
 - Investigate the receiver's stated reason before rewording content.
 - Low or zero complaint rates can mean mail already lands in Spam, where users cannot report it. Low-volume data may be withheld and dashboards lag. Missing data is not health.
 - Pixel opens are not a reputation signal: Google does not use them; Apple Mail Privacy Protection prefetches content.
 - Microsoft 365: SCL no longer determines the cloud spam verdict (August 2026). Inspect `CAT`, `DIR`, `BCL`, `compauth`, the applicable policy, and the detection technology instead of an old SCL table.
 
-Provider tooling:
-
 | Receiver | Evidence source |
 | --- | --- |
 | Gmail | Postmaster Tools: authentication, reputation, compliance, campaign feedback |
-| Yahoo | Complaint Feedback Loop for enrolled DKIM domains; feed it into suppression |
+| Yahoo | Complaint Feedback Loop for enrolled DKIM domains |
 | Microsoft consumer | SNDS and JMRP |
 | Microsoft 365 | Delivered headers, message trace, detector, tenant policy |
 
 ## 32.9 Never
 
-- NEVER send marketing mail without recorded consent, or to purchased lists.
+Every "Higher risk" pattern in 32.5 is also prohibited. In addition:
+
+- NEVER send promotional mail without recorded consent.
 - NEVER modify a message after DKIM signing.
-- NEVER publish multiple SPF records for one domain or exceed ten lookup-causing terms.
-- NEVER let the visible From domain go unaligned with every passing authenticated identity.
 - NEVER forge, copy, or self-insert `Authentication-Results`, spam-score, or other trust headers.
-- NEVER fake reply/forward threads, impersonate people or institutions, or invent urgency.
-- NEVER ask for passwords or credentials by email, or announce payment-route changes without an established verification path.
-- NEVER obfuscate text (homoglyphs, zero-width characters, hidden filler) to evade filters.
-- NEVER disguise link destinations.
 - NEVER include scripts, forms, iframes, or embedded objects.
-- NEVER keep mailing after an unsubscribe, complaint, or hard bounce, including from already-queued campaigns.
-- NEVER unsubscribe on `GET`, or require login/confirmation for the one-click `POST`.
-- NEVER retry permanent failures, or retry deferrals aggressively without backoff.
+- NEVER keep mailing a recipient after an unsubscribe or complaint.
+- NEVER retry `5xx` failures.
 - NEVER report delivery success from SMTP acceptance, a DNS dashboard, or a generic spam checker.
-- NEVER log full message bodies, tokens, or recipient lists into unprotected telemetry.
+- NEVER log message bodies, unsubscribe tokens, or recipient lists into unprotected telemetry.
 
 ## 32.10 Do not enforce myths
 
@@ -205,17 +184,3 @@ The evidence does not support these blanket rules. Do not encode them as validat
 - "Passing a generic spam checker predicts Gmail's decision."
 
 Words still matter in context. Microsoft 365 Advanced Spam Filter options (off by default, not in Standard/Strict presets) can act on an undisclosed sensitive-word list, URL forms, and HTML elements. Zoho administrators can define subject/body patterns. NetEase names keyword examples such as 发票 ("invoice") and 展会 ("trade fair"). A local administrator can always be stricter than the provider default; diagnose per receiver.
-
-## 32.11 Release checklist
-
-Require evidence, not configuration screenshots:
-
-- [ ] A message delivered through the real ESP to each target receiver shows SPF, DKIM, and DMARC `pass` with alignment in the receiver's `Authentication-Results`.
-- [ ] Forward and reverse DNS and TLS verified on every production sending path, IPv4 and IPv6.
-- [ ] Each message type has a recorded eligibility basis; transactional and promotional streams are separated.
-- [ ] From name and domain are stable and recognizable; Reply-To and support routes work.
-- [ ] Content is accurate; links resolve to expected domains; attachments are expected and safe; plain-text and HTML parts agree.
-- [ ] One-click unsubscribe tested end to end: `POST` suppresses, `GET` does not, repeats are harmless, queued sends honor it.
-- [ ] Bounce classification and complaint feedback reach the suppression system.
-- [ ] SMTP diagnostics, Message-ID, and template version are captured for every send.
-- [ ] Launch volume ramps gradually with backoff on deferrals.
