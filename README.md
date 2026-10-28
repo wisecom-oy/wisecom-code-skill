@@ -30,6 +30,8 @@ Guides the agent through understanding the task, designing the smallest correct 
 - SEO and AI discovery: crawlable rendering, crawler roles, canonicals, sitemaps, truthful structured data, and measured GEO experiments.
 - Evidence-based completion: report checks actually run; never invent APIs or claim unobserved success.
 
+The email and SEO chapters load from code signals (SMTP/ESP calls, mail templates, HTML routes, redirects, `robots.txt`, sitemaps, metadata), so the agent applies them even when you don't mention deliverability or SEO.
+
 Ask your agent: **“Use wisecom-coding to implement this change”** or **“Review this change using wisecom-coding.”** Activation depends on your agent; installing the skill does not enforce rules through hooks or CI.
 
 ## Policy and enforcement

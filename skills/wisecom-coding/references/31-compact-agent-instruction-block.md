@@ -22,6 +22,9 @@ analyze unrelated systems or waive security, integrity, or repository-required c
 - Identify the owning module, invariants, trust boundaries, side effects, failure modes,
   transaction/concurrency risks, and third-party dependencies.
 - Make the smallest coherent change; do not redesign unrelated code.
+- If the change sends email or serves public web pages, routes, redirects, robots,
+  sitemaps, metadata, or crawler rules, apply the email-deliverability or
+  SEO/AI-discovery chapter even when the user did not mention it.
 
 ### While coding:
 

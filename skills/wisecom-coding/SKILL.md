@@ -5,9 +5,11 @@ description: >
   refactoring, reviewing, testing, or designing software in any repository.
   Covers contracts, invariants, naming, functions, state, safe typing, security,
   errors, APIs, concurrency, transactions, retries, performance, observability,
-  architecture, scaling, dependencies, evidence-based verification, email
-  deliverability (SPF, DKIM, DMARC, unsubscribe, suppression, spam filtering),
-  and SEO/AI discovery (crawlers, indexing, canonicals, structured data, GEO).
+  architecture, scaling, dependencies, and evidence-based verification. Also use
+  whenever code sends email or serves public web pages, even if the user does not
+  mention it: email deliverability (SPF, DKIM, DMARC, unsubscribe, suppression,
+  spam filtering) and SEO/AI discovery (crawlers, robots.txt, redirects, canonicals,
+  sitemaps, structured data, GEO).
 license: MIT
 metadata:
   author: wisecom-oy
@@ -101,8 +103,9 @@ The references are the full standard, not optional summaries. At task start read
 [the operating procedure](references/03-ai-coding-agent-operating-procedure.md)
 and [the compact instruction block](references/31-compact-agent-instruction-block.md).
 Then apply the risk tiers above. Trivial/local changes need no additional chapter
-loading unless inspection exposes a relevant uncertainty. For moderate and
-high-risk changes, read every relevant chapter, including its caveats and examples.
+loading unless inspection exposes a relevant uncertainty or a domain signal below.
+For moderate and high-risk changes, read every relevant chapter, including its
+caveats and examples.
 A retrying payment operation needs contracts, errors, security, concurrency,
 typing, tests, and observability—not just the chapter matching its headline.
 
@@ -112,6 +115,20 @@ when a design or review question calls for them. Use applicable sections of
 [the definition of done](references/30-definition-of-done-checklist.md) for moderate
 changes and review the full checklist for high-risk changes. Report relevant
 checks that were unavailable rather than assuming they passed.
+
+### Domain chapters load from code signals
+
+Chapters 32 and 33 carry provider rules agents do not know by default. Load them
+when inspection shows the change touches one of these signals, even if the user
+never mentions deliverability, SEO, or AI search. This applies at every risk tier:
+a one-line `robots.txt`, redirect, or DKIM-signing-order change can silently remove
+a site from search or send mail to spam. Read the sections covering the touched
+behavior, apply their Never lists, and surface any violated rule to the user.
+
+| Signal in code, config, or task | Load |
+| --- | --- |
+| Sending email: SMTP clients, ESP SDKs/APIs (SES, SendGrid, Postmark, Mailgun, and similar), MIME building, mail templates, newsletters, notifications, password-reset/verification mail, bounce or unsubscribe handling, `List-Unsubscribe`, suppression lists, SPF/DKIM/DMARC DNS records | [32. Email Deliverability](references/32-email-deliverability.md) |
+| Public web pages: HTML routes, SSR/SSG frameworks, `<head>`/meta tags, status codes for missing or moved pages, redirects, URL or route changes, pagination, faceted filters, `robots.txt`, `sitemap.xml`, canonical/`hreflang`, JSON-LD, product/business feeds, CDN/WAF bot rules, site migrations, search or AI-referral analytics | [33. SEO and AI Discovery](references/33-seo-and-ai-discovery.md) |
 
 All paths below are relative to this installed skill directory, not the target
 repository. Read them with the host agent's file tools. Load details on demand,
