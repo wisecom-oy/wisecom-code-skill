@@ -5,7 +5,8 @@ description: >
   refactoring, reviewing, testing, or designing software in any repository.
   Covers contracts, invariants, naming, functions, state, safe typing, security,
   errors, APIs, concurrency, transactions, retries, performance, observability,
-  architecture, scaling, dependencies, and evidence-based verification.
+  architecture, scaling, dependencies, evidence-based verification, and email
+  deliverability (SPF, DKIM, DMARC, unsubscribe, suppression, spam filtering).
 license: MIT
 metadata:
   author: wisecom-oy
@@ -152,6 +153,7 @@ not the entire playbook for every small task.
 | [29. End-to-End Implementation Workflow](references/29-end-to-end-implementation-workflow.md) | Executing the seven phases of a non-trivial change. |
 | [30. Definition of Done Checklist](references/30-definition-of-done-checklist.md) | Checking all applicable completion criteria before returning work. |
 | [31. Compact Agent Instruction Block](references/31-compact-agent-instruction-block.md) | Loading the compact baseline instructions at task start. |
+| [32. Email Deliverability](references/32-email-deliverability.md) | Building, signing, sending, unsubscribing, suppressing, or diagnosing email, or changing sending-domain DNS. |
 
 ## Policy and enforcement
 
